@@ -16,7 +16,10 @@
 void interactiveMode() {
     char command[MAX_COMMAND_LENGTH];
     char *args[MAX_ARG];
-    char path[MAX_COMMAND_LENGTH] = "/bin";
+    char path[MAX_ARG][MAX_COMMAND_LENGTH];
+    //char path[MAX_COMMAND_LENGTH] = "/bin";
+    strcpy(path[0], "/bin");
+    strcpy(path[1], "/usr/bin");
 
     for (int i = 0; i < MAX_ARG; i++) {
         args[i] = "\0";
@@ -35,7 +38,7 @@ void interactiveMode() {
         // Tokenize the input
         tokenize(command, args);
         // Execute the command
-        strcpy(path, exec_cmd(args, path));
+        exec_cmd(args, path);
     }
 }
 
@@ -44,8 +47,10 @@ void batchMode(char *filename) {
     char command[MAX_COMMAND_LENGTH];
     char *args[MAX_ARG];
     FILE *file = fopen(filename, "r");
-    char path[MAX_COMMAND_LENGTH] = "/bin";;
-
+    char path[MAX_ARG][MAX_COMMAND_LENGTH];
+    //char path[MAX_COMMAND_LENGTH] = "/bin";;
+    strcpy(path[0], "/bin");
+    strcpy(path[1], "/usr/bin");
     for (int i = 0; i < MAX_ARG; i++) {
         args[i] = "\0";
     }
@@ -62,7 +67,7 @@ void batchMode(char *filename) {
         // Tokenize the input
         tokenize(command, args);
         // Execute the commandX_I
-        strcpy(path, exec_cmd(args, path));
+        exec_cmd(args, path);
     }
     fclose(file);
 }

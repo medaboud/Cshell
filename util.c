@@ -6,7 +6,7 @@
 #include <dirent.h>
 #include "header.h"
 
-#define MAX_COMMAND_LENGTH 500
+#define MAX_COMMAND_LENGTH 100
 #define MAX_ARG 10
 #define ERROR_MESSAGE "An error has occurred\n"
 
@@ -23,7 +23,7 @@ void tokenize(char command[], char* args[]) {
 }
 
 // executes the command by pasing the arguments and the path
-char * exec_cmd(char *args[], char path[]) {
+void exec_cmd(char *args[], char path[][MAX_COMMAND_LENGTH]) {
     // path command implementation
     if(strcmp(args[0], "path") == 0) {
         change_path(args, path);
@@ -44,17 +44,19 @@ char * exec_cmd(char *args[], char path[]) {
     } else {
         execute(args, path);
     }
-    return path;
 }
 
 //path execution command
-void change_path(char *args[], char path[]) {
+void change_path(char *args[], char path[][MAX_COMMAND_LENGTH]) {
     char cwd[100];
     for (int k = 0; k < 100; k++) {
         cwd[k] = '\0';
     }
     int i = 1;
-    strcpy(path, "");
+
+    for (int k = 0; k < MAX_ARG; k++) {
+        strcpy(path[k], "");
+    }
     while(i < sizeof(*args) && args[i] != NULL)
     {
         // check if path provided exists in current directory
@@ -62,22 +64,22 @@ void change_path(char *args[], char path[]) {
             getcwd(cwd, sizeof(cwd));
             strcat(cwd, "/");
             strcat(cwd, args[i]);
-            strcpy(path, cwd);
+            strcpy(path[i-1], cwd);
         }
         // check if path is an absolute path (from root).
         if(exist_in("/", args[i])) {
             strcpy(cwd, "/");
             strcat(cwd, args[i]);
-            strcpy(path, cwd);
+            strcpy(path[i], cwd);
         }
         i++;
     }
 }
 
 //execute command that are not 'cd' 'path' or 'exit'
-void execute(char *args[], char path[]) {
+void execute(char *args[], char path[][MAX_COMMAND_LENGTH]) {
     pid_t pid, wpid;
-    int status;
+    int status = 0;
     pid = fork();
     if (pid < 0) {
         perror("Fork Failed");
@@ -88,13 +90,20 @@ void execute(char *args[], char path[]) {
         } while(!WIFEXITED(status) && !WIFSIGNALED(status));
     } else {
         char temp_path[100];
-        strcpy(temp_path, path);
-        strcat(temp_path, "/");
-        strcat(temp_path, args[0]);
-
-        if(access(temp_path, X_OK) == 0) {
+        int k = 0;
+        do {
+            for (int i = 0; i < 100; i++) {
+                temp_path[i] = '\0';
+            }
+            strcpy(temp_path, path[k]);
+            strcat(temp_path, "/");
+            strcat(temp_path, args[0]);
+            k++;
+        } while(access(temp_path, X_OK) != 0 && k < sizeof(*path));
+        execv(temp_path, args);
+        /*if(access(temp_path, X_OK) == 0) {
             execv(temp_path, args);
-        }
+        }*/
         write(STDERR_FILENO, ERROR_MESSAGE, strlen(ERROR_MESSAGE));
         exit(EXIT_FAILURE);
     }
