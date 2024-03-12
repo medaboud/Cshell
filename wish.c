@@ -17,14 +17,17 @@ void interactiveMode() {
     char command[MAX_COMMAND_LENGTH];
     char *args[MAX_ARG];
     char path[MAX_ARG][MAX_COMMAND_LENGTH];
+    //strcpy(path[0], "/home/mohamed/CLionProjects/untitled1/cmake-build-debug/tests/p2a-test");
+    //strcpy(path[0], "/home/mohamed/CLionProjects/untitled1/cmake-build-debug/tests");
     strcpy(path[0], "/bin");
-    for (int i = 0; i < MAX_ARG; i++) {
-        args[i] = "\0";
-    }
-    for (int k = 0; k < MAX_COMMAND_LENGTH; k++) {
-        command[k] = '\0';
-    }
+
     while (1) {
+        for (int i = 0; i < MAX_ARG; i++) {
+            args[i] = "\0";
+        }
+        for (int k = 0; k < MAX_COMMAND_LENGTH; k++) {
+            command[k] = '\0';
+        }
         printf("wish> ");
         if(fgets(command, sizeof(command), stdin) == NULL) {
             write(STDERR_FILENO, ERROR_MESSAGE, strlen(ERROR_MESSAGE));

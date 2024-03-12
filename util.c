@@ -48,7 +48,12 @@ void exec_cmd(char *args[], char path[][MAX_COMMAND_LENGTH]) {
 
 //path execution command
 void change_path(char *args[], char path[][MAX_COMMAND_LENGTH]) {
-    char cwd[100];
+    char cwd[MAX_COMMAND_LENGTH];
+
+    for (int i = 0; i < MAX_COMMAND_LENGTH; i++) {
+        cwd[i] = '\0';
+    }
+
     for (int k = 0; k < MAX_ARG; k++) {
         for (int l = 0; l < MAX_COMMAND_LENGTH; l++) {
             path[k][l] = '\0';
@@ -58,14 +63,13 @@ void change_path(char *args[], char path[][MAX_COMMAND_LENGTH]) {
     int pathCounter = 1;
     while(pathCounter < sizeof(*args) && args[pathCounter] != NULL)
     {
-        // check if path provided exists in current directory
-        if(exist_in(".", args[pathCounter])) {
-            getcwd(cwd, sizeof(cwd));
-            strcat(cwd, "/");
-        }
-        // check if path is an absolute path (from root).
+        // check if path is a directory in root.
         if(exist_in("/", args[pathCounter])) {
             strcpy(cwd, "/");
+        }
+        else {
+            getcwd(cwd, sizeof(cwd));
+            strcat(cwd, "/");
         }
         strcat(cwd, args[pathCounter]);
         strcpy(path[pathCounter-1], cwd);
@@ -94,9 +98,11 @@ void execute(char *args[], char path[][MAX_COMMAND_LENGTH]) {
             strcat(temp_path, args[0]);
             pathCounter++;
         } while(access(temp_path, X_OK) != 0 && pathCounter < MAX_ARG);
+        printf("command : %s\n", temp_path);
         execv(temp_path, args);
+        printf("hohohohohooh\n");
         write(STDERR_FILENO, ERROR_MESSAGE, strlen(ERROR_MESSAGE));
-        exit(EXIT_FAILURE);
+        _exit(EXIT_FAILURE);
     }
 }
 
