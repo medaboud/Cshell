@@ -49,30 +49,27 @@ void exec_cmd(char *args[], char path[][MAX_COMMAND_LENGTH]) {
 //path execution command
 void change_path(char *args[], char path[][MAX_COMMAND_LENGTH]) {
     char cwd[100];
-    for (int k = 0; k < 100; k++) {
-        cwd[k] = '\0';
-    }
-    int i = 1;
-
     for (int k = 0; k < MAX_ARG; k++) {
-        strcpy(path[k], "");
+        for (int l = 0; l < MAX_COMMAND_LENGTH; l++) {
+            path[k][l] = '\0';
+        }
     }
-    while(i < sizeof(*args) && args[i] != NULL)
+
+    int pathCounter = 1;
+    while(pathCounter < sizeof(*args) && args[pathCounter] != NULL)
     {
         // check if path provided exists in current directory
-        if(exist_in(".", args[i])) {
+        if(exist_in(".", args[pathCounter])) {
             getcwd(cwd, sizeof(cwd));
             strcat(cwd, "/");
-            strcat(cwd, args[i]);
-            strcpy(path[i-1], cwd);
         }
         // check if path is an absolute path (from root).
-        if(exist_in("/", args[i])) {
+        if(exist_in("/", args[pathCounter])) {
             strcpy(cwd, "/");
-            strcat(cwd, args[i]);
-            strcpy(path[i], cwd);
         }
-        i++;
+        strcat(cwd, args[pathCounter]);
+        strcpy(path[pathCounter-1], cwd);
+        pathCounter++;
     }
 }
 
@@ -89,21 +86,15 @@ void execute(char *args[], char path[][MAX_COMMAND_LENGTH]) {
             wpid = waitpid(pid, &status, WUNTRACED);
         } while(!WIFEXITED(status) && !WIFSIGNALED(status));
     } else {
-        char temp_path[100];
-        int k = 0;
+        char temp_path[MAX_COMMAND_LENGTH];
+        int pathCounter = 0;
         do {
-            for (int i = 0; i < 100; i++) {
-                temp_path[i] = '\0';
-            }
-            strcpy(temp_path, path[k]);
+            strcpy(temp_path, path[pathCounter]);
             strcat(temp_path, "/");
             strcat(temp_path, args[0]);
-            k++;
-        } while(access(temp_path, X_OK) != 0 && k < sizeof(*path));
+            pathCounter++;
+        } while(access(temp_path, X_OK) != 0 && pathCounter < MAX_ARG);
         execv(temp_path, args);
-        /*if(access(temp_path, X_OK) == 0) {
-            execv(temp_path, args);
-        }*/
         write(STDERR_FILENO, ERROR_MESSAGE, strlen(ERROR_MESSAGE));
         exit(EXIT_FAILURE);
     }
@@ -111,16 +102,14 @@ void execute(char *args[], char path[][MAX_COMMAND_LENGTH]) {
 
 // checks if the folder (arg) is in the specified directory
 int exist_in(char* location, char* arg){
-
-        DIR *dir;
-        struct dirent *entry;
-        dir = opendir(location);
-
-        while((entry = readdir(dir)) != NULL) {
-                if (strcmp(arg, entry->d_name) == 0) {
-                        return 1;
-                }
+    DIR *dir;
+    struct dirent *entry;
+    dir = opendir(location);
+    while((entry = readdir(dir)) != NULL) {
+        if (strcmp(arg, entry->d_name) == 0) {
+            return 1;
         }
-        closedir(dir);
-        return 0;
+    }
+    closedir(dir);
+    return 0;
 }

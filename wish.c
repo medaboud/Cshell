@@ -17,10 +17,7 @@ void interactiveMode() {
     char command[MAX_COMMAND_LENGTH];
     char *args[MAX_ARG];
     char path[MAX_ARG][MAX_COMMAND_LENGTH];
-    //char path[MAX_COMMAND_LENGTH] = "/bin";
     strcpy(path[0], "/bin");
-    strcpy(path[1], "/usr/bin");
-
     for (int i = 0; i < MAX_ARG; i++) {
         args[i] = "\0";
     }
@@ -48,9 +45,7 @@ void batchMode(char *filename) {
     char *args[MAX_ARG];
     FILE *file = fopen(filename, "r");
     char path[MAX_ARG][MAX_COMMAND_LENGTH];
-    //char path[MAX_COMMAND_LENGTH] = "/bin";;
     strcpy(path[0], "/bin");
-    strcpy(path[1], "/usr/bin");
     for (int i = 0; i < MAX_ARG; i++) {
         args[i] = "\0";
     }

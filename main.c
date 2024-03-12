@@ -7,7 +7,6 @@
 #include "header.h"
 
 int main(int argc, char *argv[]) {
-
     if (argc == 1) {
         // No command line arguments, run in interactive mode
         interactiveMode();
@@ -20,6 +19,5 @@ int main(int argc, char *argv[]) {
         write(STDERR_FILENO, error_message, strlen(error_message));
         return 1;
     }
-
     return 0;
 }
