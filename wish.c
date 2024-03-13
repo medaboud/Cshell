@@ -57,7 +57,7 @@ void batchMode(char *filename) {
     }
     if(file == NULL) {
         write(STDERR_FILENO, ERROR_MESSAGE, strlen(ERROR_MESSAGE));
-        exit(0);
+        exit(1);
     }
     while (fgets(command, MAX_COMMAND_LENGTH, file) != NULL) {
         // Remove newline character from the input

@@ -4,6 +4,7 @@
 #include <unistd.h>
 #include <sys/wait.h>
 #include <dirent.h>
+#include <errno.h>
 #include "header.h"
 
 #define MAX_COMMAND_LENGTH 100
@@ -98,9 +99,15 @@ void execute(char *args[], char path[][MAX_COMMAND_LENGTH]) {
             strcat(temp_path, args[0]);
             pathCounter++;
         } while(access(temp_path, X_OK) != 0 && pathCounter < MAX_ARG);
-        printf("command : %s\n", temp_path);
+        //printf("command : %s\n", temp_path);
         execv(temp_path, args);
-        printf("hohohohohooh\n");
+        //char* a[] = {"test3", NULL};
+        //execv("/home/mohamed/CLionProjects/untitled1/tests/p2a-test/test3", a);
+        //errno();
+        if(errno == 8) {
+            _exit(EXIT_FAILURE);
+        }
+        //printf("hohohohohooh\n");
         write(STDERR_FILENO, ERROR_MESSAGE, strlen(ERROR_MESSAGE));
         _exit(EXIT_FAILURE);
     }
