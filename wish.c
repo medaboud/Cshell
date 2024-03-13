@@ -17,8 +17,7 @@ void interactiveMode() {
     char command[MAX_COMMAND_LENGTH];
     char *args[MAX_ARG];
     char path[MAX_ARG][MAX_COMMAND_LENGTH];
-    //strcpy(path[0], "/home/mohamed/CLionProjects/untitled1/cmake-build-debug/tests/p2a-test");
-    //strcpy(path[0], "/home/mohamed/CLionProjects/untitled1/cmake-build-debug/tests");
+
     strcpy(path[0], "/bin");
 
     while (1) {
@@ -31,7 +30,7 @@ void interactiveMode() {
         printf("wish> ");
         if(fgets(command, sizeof(command), stdin) == NULL) {
             write(STDERR_FILENO, ERROR_MESSAGE, strlen(ERROR_MESSAGE));
-            exit(0);
+            exit(1);
         }
         // Remove newline character from the input
         command[strcspn(command, "\n")] = '\0';
