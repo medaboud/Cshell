@@ -5,6 +5,7 @@
 #include <sys/wait.h>
 #include <dirent.h>
 #include <errno.h>
+
 #include "header.h"
 
 #define MAX_COMMAND_LENGTH 100
@@ -171,5 +172,34 @@ int char_count(char** arr, char ch) {
             count++;
         }
     }
+    return count;
+}
+
+// return the number of words in a string
+int count_words(const char *str) {
+    int count = 0;
+    int in_word = 0; // Flag to track whether we are inside a word
+
+    // Iterate through each character in the string
+    while (*str != '\0') {
+        // If the current character is a whitespace and we were in a word before
+        // then increment the word count and reset the flag
+        if (isspace(*str) && in_word) {
+            count++;
+            in_word = 0;
+        }
+        // If the current character is not a whitespace, set the in_word flag
+        else if (!isspace(*str)) {
+            in_word = 1;
+        }
+        str++; // Move to the next character
+    }
+
+    // If the last character is not a whitespace and we were in a word before
+    // then increment the word count to include the last word
+    if (in_word) {
+        count++;
+    }
+
     return count;
 }
