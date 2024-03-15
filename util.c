@@ -23,8 +23,33 @@ void tokenize(char command[], char* args[]) {
         args[arg_count] = NULL;
 }
 
+void tokenize_for_redirection(char command[], char* args[], char file[]) {
+
+    int arg_count = 0;
+    char* token = strtok(command, ">");
+
+    while (token != NULL && arg_count < MAX_ARG -1) {
+        args[arg_count++] = token;
+        token = strtok(NULL, ">");
+    }
+    args[arg_count] = "\0";
+    strcpy(file,args[arg_count - 1]);
+    tokenize(args[0], args);
+}
+
+// splits a command into multiple arguments
+void split_command(char command[], char* args[]) {
+    int arg_count = 0;
+    char* token = strtok(command, " ");
+
+    while (token != NULL && arg_count < MAX_ARG -1) {
+        args[arg_count++] = token;
+        token = strtok(NULL, " ");
+    }
+}
+
 // executes the command by pasing the arguments and the path
-void exec_cmd(char *args[], char path[][MAX_COMMAND_LENGTH]) {
+void exec_cmd(char *args[], char path[][MAX_COMMAND_LENGTH], char out_file[]) {
     // path command implementation
     if(strcmp(args[0], "path") == 0) {
         change_path(args, path);
@@ -43,7 +68,7 @@ void exec_cmd(char *args[], char path[][MAX_COMMAND_LENGTH]) {
             write(STDERR_FILENO, ERROR_MESSAGE, strlen(ERROR_MESSAGE));
         }
     } else {
-        execute(args, path);
+        execute(args, path, out_file);
     }
 }
 
@@ -79,7 +104,7 @@ void change_path(char *args[], char path[][MAX_COMMAND_LENGTH]) {
 }
 
 //execute command that are not 'cd' 'path' or 'exit'
-void execute(char *args[], char path[][MAX_COMMAND_LENGTH]) {
+void execute(char *args[], char path[][MAX_COMMAND_LENGTH], char out_file[]) {
     pid_t pid, wpid;
     int status = 0;
     pid = fork();
@@ -98,14 +123,26 @@ void execute(char *args[], char path[][MAX_COMMAND_LENGTH]) {
             strcat(temp_path, "/");
             strcat(temp_path, args[0]);
             pathCounter++;
-        } while(access(temp_path, X_OK) != 0 && pathCounter < MAX_ARG);
+            //printf("temp_path : %s\n", temp_path);
+        } while(access(temp_path, X_OK) != 0 && strcmp(path[pathCounter], "") != 0);
 
+        if(strcmp(out_file, " ") != 0) {
+            FILE *file = fopen(out_file, "w");
+            if(file == NULL) {
+                write(STDERR_FILENO, ERROR_MESSAGE, strlen(ERROR_MESSAGE));
+                _exit(EXIT_FAILURE);
+            }
+            if(dup2(fileno(file), fileno(stdout)) == -1) {
+                write(STDERR_FILENO, ERROR_MESSAGE, strlen(ERROR_MESSAGE));
+                _exit(EXIT_FAILURE);
+            }
+            fclose(file);
+        }
         execv(temp_path, args);
-
         // wrote this to handle "Exec format failed"
-        /*if(errno == 8) {
+        if(errno == 8) {
             _exit(EXIT_FAILURE);
-        }*/
+        }
         write(STDERR_FILENO, ERROR_MESSAGE, strlen(ERROR_MESSAGE));
         _exit(EXIT_FAILURE);
     }
@@ -123,4 +160,16 @@ int exist_in(char* location, char* arg){
     }
     closedir(dir);
     return 0;
+}
+
+// return the number of occurrences of a certain character
+int char_count(char** arr, char ch) {
+    int count = 0;
+    for(int i = 0; i < MAX_ARG; i++) {
+        const char* str = arr[i];
+        if (*str == ch){
+            count++;
+        }
+    }
+    return count;
 }
