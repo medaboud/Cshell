@@ -5,7 +5,7 @@
 #include <sys/wait.h>
 #include <dirent.h>
 #include <errno.h>
-
+#include <ctype.h>
 #include "header.h"
 
 #define MAX_COMMAND_LENGTH 100
@@ -14,14 +14,14 @@
 
 // tokenize the line read from file or stdin
 void tokenize(char command[], char* args[]) {
-        int arg_count = 0;
-        char* token = strtok(command, " ");
+    int arg_count = 0;
+    char* token = strtok(command, " ");
 
-        while (token != NULL && arg_count < MAX_ARG -1) {
-                args[arg_count++] = token;
-                token = strtok(NULL, " ");
-        }
-        args[arg_count] = NULL;
+    while (token != NULL && arg_count < MAX_ARG -1) {
+            args[arg_count++] = token;
+            token = strtok(NULL, " ");
+    }
+    args[arg_count] = NULL;
 }
 
 void tokenize_for_redirection(char command[], char* args[], char file[]) {
@@ -35,6 +35,10 @@ void tokenize_for_redirection(char command[], char* args[], char file[]) {
     }
     args[arg_count] = "\0";
     strcpy(file,args[arg_count - 1]);
+
+    if(count_words(file) > 1) {
+        strcpy(file,"TOO_MANY_FILES");
+    }
     tokenize(args[0], args);
 }
 
@@ -127,7 +131,11 @@ void execute(char *args[], char path[][MAX_COMMAND_LENGTH], char out_file[]) {
             //printf("temp_path : %s\n", temp_path);
         } while(access(temp_path, X_OK) != 0 && strcmp(path[pathCounter], "") != 0);
 
-        if(strcmp(out_file, " ") != 0) {
+        if(strcmp(out_file, "TOO_MANY_FILES") == 0) {
+            write(STDERR_FILENO, ERROR_MESSAGE, strlen(ERROR_MESSAGE));
+            _exit(EXIT_FAILURE);
+        }
+        else if(strcmp(out_file, " ") != 0) {
             FILE *file = fopen(out_file, "w");
             if(file == NULL) {
                 write(STDERR_FILENO, ERROR_MESSAGE, strlen(ERROR_MESSAGE));
@@ -150,7 +158,7 @@ void execute(char *args[], char path[][MAX_COMMAND_LENGTH], char out_file[]) {
 }
 
 // checks if the folder (arg) is in the specified directory
-int exist_in(char* location, char* arg){
+int exist_in(char* location, char* arg) {
     DIR *dir;
     struct dirent *entry;
     dir = opendir(location);
@@ -200,6 +208,5 @@ int count_words(const char *str) {
     if (in_word) {
         count++;
     }
-
     return count;
 }

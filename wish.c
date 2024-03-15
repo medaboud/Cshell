@@ -34,6 +34,7 @@ void interactiveMode() {
         }
         // Remove newline character from the input
         command[strcspn(command, "\n")] = '\0';
+        //command[strcspn(command, "\t")] = ' ';
 
         if(strchr(command, '>') != NULL) {
             char cmd[MAX_COMMAND_LENGTH];
@@ -59,6 +60,9 @@ void interactiveMode() {
             }
             else {
                 char file[MAX_COMMAND_LENGTH] = "";
+                for (int i = 0; i < MAX_ARG; i++) {
+                    args[i] = "\0";
+                }
                 tokenize_for_redirection(command, args, file);
                 exec_cmd(args, path, file);
             }
@@ -67,7 +71,9 @@ void interactiveMode() {
             // Tokenize the input
             tokenize(command, args);
             // Execute the command
-            exec_cmd(args, path, " ");
+            if(args[0] != NULL) {
+                exec_cmd(args, path, " ");
+            }
         }
     }
 }
@@ -92,6 +98,7 @@ void batchMode(char *filename) {
     while (fgets(command, MAX_COMMAND_LENGTH, file) != NULL) {
         // Remove newline character from the input
         command[strcspn(command, "\n")] = '\0';
+        //command[strcspn(command, "\t")] = ' ';
 
         if(strchr(command, '>') != NULL) {
             char cmd[MAX_COMMAND_LENGTH];
@@ -117,6 +124,7 @@ void batchMode(char *filename) {
             }
             else {
                 char file[MAX_COMMAND_LENGTH] = "";
+
                 tokenize_for_redirection(command, args, file);
                 exec_cmd(args, path, file);
             }
@@ -125,7 +133,9 @@ void batchMode(char *filename) {
             // Tokenize the input
             tokenize(command, args);
             // Execute the commandX_I
-            exec_cmd(args, path, " ");
+            if(args[0] != NULL) {
+                exec_cmd(args, path, " ");
+            }
         }
 
     }
