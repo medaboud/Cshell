@@ -11,3 +11,4 @@ void execute(char *args[], char path[][MAX_COMMAND_LENGTH], char out_file[]);
 int exist_in(char* location, char* arg);
 int char_count(char** str, char ch);
 int count_words(const char *str);
+void deleteTabs(char *str);
