@@ -210,3 +210,16 @@ int count_words(const char *str) {
     }
     return count;
 }
+
+// delete tabs from a command
+void deleteTabs(char *str) {
+    int i, j;
+    int len = strlen(str);
+
+    for (i = 0, j = 0; i < len; i++) {
+        if (str[i] != '\t') {
+            str[j++] = str[i];
+        }
+    }
+    str[j] = '\0'; // Null terminate the string at the new length
+}
