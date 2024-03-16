@@ -2,6 +2,7 @@
 
 void interactiveMode();
 void batchMode(char* filename);
+void process_input(char command[], char* args[], char path[][MAX_COMMAND_LENGTH]);
 void tokenize(char command[], char* args[]);
 void tokenize_for_redirection(char command[], char* args[], char file[]);
 void split_command(char command[], char* args[]);

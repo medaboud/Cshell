@@ -24,8 +24,8 @@ void tokenize(char command[], char* args[]) {
     args[arg_count] = NULL;
 }
 
+// get arguments for command and output file for redirection
 void tokenize_for_redirection(char command[], char* args[], char file[]) {
-
     int arg_count = 0;
     char* token = strtok(command, ">");
 
@@ -33,9 +33,9 @@ void tokenize_for_redirection(char command[], char* args[], char file[]) {
         args[arg_count++] = token;
         token = strtok(NULL, ">");
     }
-    args[arg_count] = "\0";
-    strcpy(file,args[arg_count - 1]);
+    args[arg_count] = NULL;
 
+    strcpy(file,args[arg_count - 1]);
     if(count_words(file) > 1) {
         strcpy(file,"TOO_MANY_FILES");
     }
@@ -84,7 +84,6 @@ void change_path(char *args[], char path[][MAX_COMMAND_LENGTH]) {
     for (int i = 0; i < MAX_COMMAND_LENGTH; i++) {
         cwd[i] = '\0';
     }
-
     for (int k = 0; k < MAX_ARG; k++) {
         for (int l = 0; l < MAX_COMMAND_LENGTH; l++) {
             path[k][l] = '\0';
@@ -128,13 +127,13 @@ void execute(char *args[], char path[][MAX_COMMAND_LENGTH], char out_file[]) {
             strcat(temp_path, "/");
             strcat(temp_path, args[0]);
             pathCounter++;
-            //printf("temp_path : %s\n", temp_path);
         } while(access(temp_path, X_OK) != 0 && strcmp(path[pathCounter], "") != 0);
 
         if(strcmp(out_file, "TOO_MANY_FILES") == 0) {
             write(STDERR_FILENO, ERROR_MESSAGE, strlen(ERROR_MESSAGE));
             _exit(EXIT_FAILURE);
         }
+        // if output file is provided, redirect the result of the command
         else if(strcmp(out_file, " ") != 0) {
             FILE *file = fopen(out_file, "w");
             if(file == NULL) {
@@ -214,7 +213,8 @@ int count_words(const char *str) {
 // delete tabs from a command
 void deleteTabs(char *str) {
     int i, j;
-    int len = strlen(str);
+    int len;
+    len = strlen(str);
 
     for (i = 0, j = 0; i < len; i++) {
         if (str[i] != '\t') {
