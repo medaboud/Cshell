@@ -1,3 +1,8 @@
+////////  Mohamed Aboud  /////////
+//////////////////////////////////
+// This file contains all functions that handles command execution
+//////////////////////////////////
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -5,53 +10,11 @@
 #include <sys/wait.h>
 #include <dirent.h>
 #include <errno.h>
-#include <ctype.h>
 #include "header.h"
 
 #define MAX_COMMAND_LENGTH 100
 #define MAX_ARG 10
 #define ERROR_MESSAGE "An error has occurred\n"
-
-// tokenize the line read from file or stdin
-void tokenize(char command[], char* args[]) {
-    int arg_count = 0;
-    char* token = strtok(command, " ");
-
-    while (token != NULL && arg_count < MAX_ARG -1) {
-            args[arg_count++] = token;
-            token = strtok(NULL, " ");
-    }
-    args[arg_count] = NULL;
-}
-
-// get arguments for command and output file for redirection
-void tokenize_for_redirection(char command[], char* args[], char file[]) {
-    int arg_count = 0;
-    char* token = strtok(command, ">");
-
-    while (token != NULL && arg_count < MAX_ARG -1) {
-        args[arg_count++] = token;
-        token = strtok(NULL, ">");
-    }
-    args[arg_count] = NULL;
-
-    strcpy(file,args[arg_count - 1]);
-    if(count_words(file) > 1) {
-        strcpy(file,"TOO_MANY_FILES");
-    }
-    tokenize(args[0], args);
-}
-
-// splits a command into multiple arguments
-void split_command(char command[], char* args[]) {
-    int arg_count = 0;
-    char* token = strtok(command, " ");
-
-    while (token != NULL && arg_count < MAX_ARG -1) {
-        args[arg_count++] = token;
-        token = strtok(NULL, " ");
-    }
-}
 
 // executes the command by pasing the arguments and the path
 void exec_cmd(char *args[], char path[][MAX_COMMAND_LENGTH], char out_file[]) {
@@ -80,7 +43,6 @@ void exec_cmd(char *args[], char path[][MAX_COMMAND_LENGTH], char out_file[]) {
 //path execution command
 void change_path(char *args[], char path[][MAX_COMMAND_LENGTH]) {
     char cwd[MAX_COMMAND_LENGTH];
-
     for (int i = 0; i < MAX_COMMAND_LENGTH; i++) {
         cwd[i] = '\0';
     }
@@ -92,8 +54,7 @@ void change_path(char *args[], char path[][MAX_COMMAND_LENGTH]) {
 
     int pathCounter = 1;
     while(pathCounter < sizeof(*args) && args[pathCounter] != NULL)
-    {
-        // check if path is a directory in root.
+    {   // check if path is a directory in root.
         if(exist_in("/", args[pathCounter])) {
             strcpy(cwd, "/");
         }
@@ -121,30 +82,11 @@ void execute(char *args[], char path[][MAX_COMMAND_LENGTH], char out_file[]) {
         } while(!WIFEXITED(status) && !WIFSIGNALED(status));
     } else {
         char temp_path[MAX_COMMAND_LENGTH];
-        int pathCounter = 0;
-        do {
-            strcpy(temp_path, path[pathCounter]);
-            strcat(temp_path, "/");
-            strcat(temp_path, args[0]);
-            pathCounter++;
-        } while(access(temp_path, X_OK) != 0 && strcmp(path[pathCounter], "") != 0);
-
-        if(strcmp(out_file, "TOO_MANY_FILES") == 0) {
-            write(STDERR_FILENO, ERROR_MESSAGE, strlen(ERROR_MESSAGE));
-            _exit(EXIT_FAILURE);
-        }
+        //build the proper path for command if it exists in path
+        build_path(args, path, temp_path);
         // if output file is provided, redirect the result of the command
-        else if(strcmp(out_file, " ") != 0) {
-            FILE *file = fopen(out_file, "w");
-            if(file == NULL) {
-                write(STDERR_FILENO, ERROR_MESSAGE, strlen(ERROR_MESSAGE));
-                _exit(EXIT_FAILURE);
-            }
-            if(dup2(fileno(file), fileno(stdout)) == -1) {
-                write(STDERR_FILENO, ERROR_MESSAGE, strlen(ERROR_MESSAGE));
-                _exit(EXIT_FAILURE);
-            }
-            fclose(file);
+        if(strcmp(out_file, " ") != 0) {
+            redirect_output(out_file);
         }
         execv(temp_path, args);
         // wrote this to handle "Exec format failed"
@@ -170,56 +112,25 @@ int exist_in(char* location, char* arg) {
     return 0;
 }
 
-// return the number of occurrences of a certain character
-int char_count(char** arr, char ch) {
-    int count = 0;
-    for(int i = 0; i < MAX_ARG; i++) {
-        const char* str = arr[i];
-        if (*str == ch){
-            count++;
-        }
-    }
-    return count;
+void build_path(char *args[], char path[][MAX_COMMAND_LENGTH], char temp_path[]) {
+    int pathCounter = 0;
+    do {
+        strcpy(temp_path, path[pathCounter]);
+        strcat(temp_path, "/");
+        strcat(temp_path, args[0]);
+        pathCounter++;
+    } while(access(temp_path, X_OK) != 0 && strcmp(path[pathCounter], "") != 0);
 }
 
-// return the number of words in a string
-int count_words(const char *str) {
-    int count = 0;
-    int in_word = 0; // Flag to track whether we are inside a word
-
-    // Iterate through each character in the string
-    while (*str != '\0') {
-        // If the current character is a whitespace and we were in a word before
-        // then increment the word count and reset the flag
-        if (isspace(*str) && in_word) {
-            count++;
-            in_word = 0;
-        }
-        // If the current character is not a whitespace, set the in_word flag
-        else if (!isspace(*str)) {
-            in_word = 1;
-        }
-        str++; // Move to the next character
+void redirect_output(char out_file[]) {
+    FILE *file = fopen(out_file, "w");
+    if(file == NULL) {
+        write(STDERR_FILENO, ERROR_MESSAGE, strlen(ERROR_MESSAGE));
+        _exit(EXIT_FAILURE);
     }
-
-    // If the last character is not a whitespace and we were in a word before
-    // then increment the word count to include the last word
-    if (in_word) {
-        count++;
+    if(dup2(fileno(file), fileno(stdout)) == -1) {
+        write(STDERR_FILENO, ERROR_MESSAGE, strlen(ERROR_MESSAGE));
+        _exit(EXIT_FAILURE);
     }
-    return count;
-}
-
-// delete tabs from a command
-void deleteTabs(char *str) {
-    int i, j;
-    int len;
-    len = strlen(str);
-
-    for (i = 0, j = 0; i < len; i++) {
-        if (str[i] != '\t') {
-            str[j++] = str[i];
-        }
-    }
-    str[j] = '\0'; // Null terminate the string at the new length
+    fclose(file);
 }

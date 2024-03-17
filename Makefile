@@ -1,5 +1,8 @@
-wish: main.o wish.o util.o
-	gcc -o wish main.o wish.o util.o
+wish: main.o wish.o util.o inputProcessing.o
+	gcc -o wish main.o wish.o util.o inputProcessing.o
+
+inputProcessing.o: inputProcessing.c
+	gcc -c inputProcessing.c
 
 util.o: util.c
 	gcc -c util.c

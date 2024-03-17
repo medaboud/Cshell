@@ -1,9 +1,8 @@
+////////  Mohamed Aboud  /////////
+//////////////////////////////////
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <sys/wait.h>
-#include <stdbool.h>
 #include "header.h"
 
 int main(int argc, char *argv[]) {

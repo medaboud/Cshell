@@ -1,6 +1,5 @@
 ////////  Mohamed Aboud  /////////
-/////////////////////////////////
-
+//////////////////////////////////
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -27,12 +26,11 @@ void interactiveMode() {
         printf("wish> ");
         if(fgets(command, sizeof(command), stdin) == NULL) {
             write(STDERR_FILENO, ERROR_MESSAGE, strlen(ERROR_MESSAGE));
-            exit(1);
+            exit(EXIT_FAILURE);
         }
         process_input(command, args, path);
     }
 }
-
 
 void batchMode(char *filename) {
     char command[MAX_COMMAND_LENGTH];
@@ -41,15 +39,15 @@ void batchMode(char *filename) {
     char path[MAX_ARG][MAX_COMMAND_LENGTH];
 
     strcpy(path[0], "/bin");
+    if(file == NULL) {
+        write(STDERR_FILENO, ERROR_MESSAGE, strlen(ERROR_MESSAGE));
+        exit(EXIT_FAILURE);
+    }
     for (int i = 0; i < MAX_ARG; i++) {
         args[i] = "\0";
     }
     for (int k = 0; k < MAX_COMMAND_LENGTH; k++) {
         command[k] = '\0';
-    }
-    if(file == NULL) {
-        write(STDERR_FILENO, ERROR_MESSAGE, strlen(ERROR_MESSAGE));
-        exit(1);
     }
     while (fgets(command, MAX_COMMAND_LENGTH, file) != NULL) {
         process_input(command, args, path);
@@ -58,48 +56,45 @@ void batchMode(char *filename) {
 }
 
 void process_input(char command[], char* args[], char path[][MAX_COMMAND_LENGTH]) {
-    // Remove newline character from the input
-    command[strcspn(command, "\n")] = '\0';
-    deleteTabs(command);
+    command[strcspn(command, "\n")] = '\0'; // Remove newline character from the input
+    deleteTabs(command);    //delete tabs from the user input
 
-    if(strchr(command, '>') != NULL) {
+    if(strchr(command, '>') != NULL) {      // if the input includes a ">"
         char cmd[MAX_COMMAND_LENGTH];
         strcpy(cmd, command);
         split_command(cmd, args);
 
+        // get the index of the last argument in user input
         int last_arg_position = 0;
         while(last_arg_position < MAX_ARG && strcmp(args[last_arg_position],"\0") != 0) {
             last_arg_position++;
         }
-
-        // check if there are more than one ">"
-        if(char_count(args, '>') > 1) {
-            write(STDERR_FILENO, ERROR_MESSAGE, strlen(ERROR_MESSAGE));
-        }
-        // check if ">" is leading the command (no command to run)
-        else if(strcmp(args[0], ">") == 0) {
-            write(STDERR_FILENO, ERROR_MESSAGE, strlen(ERROR_MESSAGE));
-        }
-        // check if ">" is trailing the command (no output file)
-        else if(last_arg_position != 0 && strcmp(args[last_arg_position - 1], ">") == 0) {
+        // check if ">" is leading the command (no command to run) or there are more than one ">"
+        // or if ">" is trailing the command (no output file)
+        if(strcmp(args[0], ">") == 0 || char_count(args, '>') > 1
+            || (last_arg_position != 0 && strcmp(args[last_arg_position - 1], ">") == 0)) {
             write(STDERR_FILENO, ERROR_MESSAGE, strlen(ERROR_MESSAGE));
         }
         // in case the command is a proper redirection
+        // checking that there is only one output file is done in "tokenize_for_redirection"
         else {
             char output_file[MAX_COMMAND_LENGTH] = "";
             for (int i = 0; i < MAX_ARG; i++) {
                 args[i] = "\0";
             }
             tokenize_for_redirection(command, args, output_file);
+            // exit with error if user provide more than one output file
+            if(strcmp(output_file, "TOO_MANY_FILES") == 0) {
+                write(STDERR_FILENO, ERROR_MESSAGE, strlen(ERROR_MESSAGE));
+                _exit(EXIT_SUCCESS);
+            }
             exec_cmd(args, path, output_file);
         }
     }
-    else {
-        // Tokenize the input
-        tokenize(command, args);
-        // Execute the command
-        if(args[0] != NULL && strcmp(args[0], "&") != 0) {
-            exec_cmd(args, path, " ");
+    else {      // if the input does not include a ">" output file will be standard output
+        tokenize(command, args);        // Tokenize the input
+        if(args[0] != NULL) {
+            exec_cmd(args, path, " ");      // Execute the command
         }
     }
 }
