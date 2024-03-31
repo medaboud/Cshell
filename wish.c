@@ -28,6 +28,18 @@ void interactiveMode() {
             write(STDERR_FILENO, ERROR_MESSAGE, strlen(ERROR_MESSAGE));
             exit(EXIT_FAILURE);
         }
+        if(strchr(command, '&') != NULL) { // if the input includes a "&"
+            command[strcspn(command, "\n")] = '\0'; // Remove newline character from the input
+            char *commands[MAX_ARG];
+            tokenize_for_parallelCmd(command, commands);
+            int i = 0;
+            while (commands[i] != NULL) {
+                printf("cmd: %s.\n", commands[i]);
+                process_input(commands[i], args, path);
+                i++;
+            }
+            break;
+        }
         process_input(command, args, path);
     }
 }
@@ -50,6 +62,21 @@ void batchMode(char *filename) {
         command[k] = '\0';
     }
     while (fgets(command, MAX_COMMAND_LENGTH, file) != NULL) {
+
+        if(strchr(command, '&') != NULL) { // if the input includes a "&"
+            command[strcspn(command, "\n")] = '\0'; // Remove newline character from the input
+            char *commands[MAX_ARG];
+            for (int i = 0; i < MAX_ARG; i++) {
+                commands[i] = "\0";
+            }
+            tokenize_for_parallelCmd(command, commands);
+            int j = 0;
+            while (commands[j] != NULL) {
+                process_input(commands[j], args, path);
+                j++;
+            }
+            break;
+        }
         process_input(command, args, path);
     }
     fclose(file);

@@ -2,6 +2,7 @@
 
 void interactiveMode();
 void batchMode(char* filename);
+void tokenize_for_parallelCmd(char command[], char* args[]);
 void process_input(char command[], char* args[], char path[][MAX_COMMAND_LENGTH]);
 
 void exec_cmd(char *args[], char path[][MAX_COMMAND_LENGTH], char out_file[]);
