@@ -117,3 +117,16 @@ void deleteTabs(char *str) {
     }
     str[j] = '\0'; // Null terminate the string at the new length
 }
+
+void remove_spaces(char *str) {
+    int i, j;
+    int len;
+    len = strlen(str);
+
+    for (i = 0, j = 0; i < len; i++) {
+        if (str[i] != ' ') {
+            str[j++] = str[i];
+        }
+    }
+    str[j] = '\0'; // Null terminate the string at the new length
+}

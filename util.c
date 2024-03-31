@@ -125,10 +125,12 @@ void build_path(char *args[], char path[][MAX_COMMAND_LENGTH], char temp_path[])
 void redirect_output(char out_file[]) {
     FILE *file = fopen(out_file, "w");
     if(file == NULL) {
+        printf("hhhhhhhhhhhhhhh");
         write(STDERR_FILENO, ERROR_MESSAGE, strlen(ERROR_MESSAGE));
         _exit(EXIT_FAILURE);
     }
     if(dup2(fileno(file), fileno(stdout)) == -1) {
+        printf("xxxxxxxxxxxxxxx");
         write(STDERR_FILENO, ERROR_MESSAGE, strlen(ERROR_MESSAGE));
         _exit(EXIT_FAILURE);
     }

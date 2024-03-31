@@ -31,12 +31,16 @@ void interactiveMode() {
         if(strchr(command, '&') != NULL) { // if the input includes a "&"
             command[strcspn(command, "\n")] = '\0'; // Remove newline character from the input
             char *commands[MAX_ARG];
+            for (int i = 0; i < MAX_ARG; i++) {
+                commands[i] = "\0";
+            }
             tokenize_for_parallelCmd(command, commands);
-            int i = 0;
-            while (commands[i] != NULL) {
-                printf("cmd: %s.\n", commands[i]);
-                process_input(commands[i], args, path);
-                i++;
+            int j = 0;
+            while (commands[j] != NULL) {
+                //remove_spaces(commands[j]);
+                printf("cmd: %s.\n", commands[j]);
+                process_input(commands[j], args, path);
+                j++;
             }
             break;
         }
@@ -63,6 +67,9 @@ void batchMode(char *filename) {
     }
     while (fgets(command, MAX_COMMAND_LENGTH, file) != NULL) {
 
+        for (int i = 0; i < MAX_ARG; i++) {
+            args[i] = "\0";
+        }
         if(strchr(command, '&') != NULL) { // if the input includes a "&"
             command[strcspn(command, "\n")] = '\0'; // Remove newline character from the input
             char *commands[MAX_ARG];
@@ -75,9 +82,10 @@ void batchMode(char *filename) {
                 process_input(commands[j], args, path);
                 j++;
             }
-            break;
+            //break;
+        } else {
+            process_input(command, args, path);
         }
-        process_input(command, args, path);
     }
     fclose(file);
 }
@@ -110,11 +118,13 @@ void process_input(char command[], char* args[], char path[][MAX_COMMAND_LENGTH]
                 args[i] = "\0";
             }
             tokenize_for_redirection(command, args, output_file);
+            remove_spaces(output_file);
             // exit with error if user provide more than one output file
             if(strcmp(output_file, "TOO_MANY_FILES") == 0) {
                 write(STDERR_FILENO, ERROR_MESSAGE, strlen(ERROR_MESSAGE));
                 _exit(EXIT_SUCCESS);
             }
+            remove_spaces(output_file);
             exec_cmd(args, path, output_file);
         }
     }
