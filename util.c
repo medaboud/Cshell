@@ -54,7 +54,12 @@ void change_path(char *args[], char path[][MAX_COMMAND_LENGTH]) {
 
     int pathCounter = 1;
     while(pathCounter < sizeof(*args) && args[pathCounter] != NULL)
-    {   // check if path is a directory in root.
+    {
+        //delete '/' from the beginning of the path
+        if(args[pathCounter][0] == '/') {
+            memmove(args[pathCounter], args[pathCounter]+1, strlen(args[pathCounter]));
+        }
+        // check if path is a directory in root.
         if(exist_in("/", args[pathCounter])) {
             strcpy(cwd, "/");
         }
@@ -70,7 +75,7 @@ void change_path(char *args[], char path[][MAX_COMMAND_LENGTH]) {
 
 //execute command that are not 'cd' 'path' or 'exit'
 void execute(char *args[], char path[][MAX_COMMAND_LENGTH], char out_file[]) {
-    pid_t pid, wpid;
+    pid_t pid;
     int status = 0;
     pid = fork();
     if (pid < 0) {
@@ -78,7 +83,7 @@ void execute(char *args[], char path[][MAX_COMMAND_LENGTH], char out_file[]) {
         exit(EXIT_FAILURE);
     } else if (pid > 0) {
         do {
-            wpid = waitpid(pid, &status, WUNTRACED);
+            waitpid(pid, &status, WUNTRACED);
         } while(!WIFEXITED(status) && !WIFSIGNALED(status));
     } else {
         char temp_path[MAX_COMMAND_LENGTH];
@@ -125,12 +130,10 @@ void build_path(char *args[], char path[][MAX_COMMAND_LENGTH], char temp_path[])
 void redirect_output(char out_file[]) {
     FILE *file = fopen(out_file, "w");
     if(file == NULL) {
-        printf("hhhhhhhhhhhhhhh");
         write(STDERR_FILENO, ERROR_MESSAGE, strlen(ERROR_MESSAGE));
         _exit(EXIT_FAILURE);
     }
     if(dup2(fileno(file), fileno(stdout)) == -1) {
-        printf("xxxxxxxxxxxxxxx");
         write(STDERR_FILENO, ERROR_MESSAGE, strlen(ERROR_MESSAGE));
         _exit(EXIT_FAILURE);
     }

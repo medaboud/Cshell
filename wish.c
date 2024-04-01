@@ -4,7 +4,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <sys/wait.h>
 #include "header.h"
+#include "signal.h"
 
 #define MAX_COMMAND_LENGTH 100
 #define MAX_ARG 10
@@ -34,17 +36,12 @@ void interactiveMode() {
             for (int i = 0; i < MAX_ARG; i++) {
                 commands[i] = "\0";
             }
-            tokenize_for_parallelCmd(command, commands);
-            int j = 0;
-            while (commands[j] != NULL) {
-                //remove_spaces(commands[j]);
-                printf("cmd: %s.\n", commands[j]);
-                process_input(commands[j], args, path);
-                j++;
-            }
-            break;
+            int command_count = tokenize_for_parallelCmd(command, commands);
+            run_parallel_command(command_count, commands, args, path);
+
+        } else {
+            process_input(command, args, path);
         }
-        process_input(command, args, path);
     }
 }
 
@@ -76,13 +73,9 @@ void batchMode(char *filename) {
             for (int i = 0; i < MAX_ARG; i++) {
                 commands[i] = "\0";
             }
-            tokenize_for_parallelCmd(command, commands);
-            int j = 0;
-            while (commands[j] != NULL) {
-                process_input(commands[j], args, path);
-                j++;
-            }
-            //break;
+            int command_count = tokenize_for_parallelCmd(command, commands);
+            run_parallel_command(command_count, commands, args, path);
+
         } else {
             process_input(command, args, path);
         }
@@ -118,7 +111,6 @@ void process_input(char command[], char* args[], char path[][MAX_COMMAND_LENGTH]
                 args[i] = "\0";
             }
             tokenize_for_redirection(command, args, output_file);
-            remove_spaces(output_file);
             // exit with error if user provide more than one output file
             if(strcmp(output_file, "TOO_MANY_FILES") == 0) {
                 write(STDERR_FILENO, ERROR_MESSAGE, strlen(ERROR_MESSAGE));
@@ -133,5 +125,32 @@ void process_input(char command[], char* args[], char path[][MAX_COMMAND_LENGTH]
         if(args[0] != NULL) {
             exec_cmd(args, path, " ");      // Execute the command
         }
+    }
+}
+
+// this function create multiple child processes to run commanads in parallel
+void run_parallel_command(int command_count, char* commands[], char* args[], char path[][MAX_COMMAND_LENGTH]) {
+    pid_t processes[command_count];
+    for(int i=0; i<command_count; i++)
+    {
+        pid_t child = fork();
+        if(child == 0)
+        {
+            process_input(commands[i], args, path);
+            _exit(0);
+        }
+        else if (child < 0)
+        {
+            perror("fork failed");
+            exit(EXIT_FAILURE);
+        }
+        processes[i] = child;
+    }
+
+    for(int i=0; i < command_count; i++)
+    {
+        pid_t child = processes[i];
+        int status = 0;
+        waitpid(child, &status, WUNTRACED);
     }
 }

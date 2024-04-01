@@ -24,7 +24,7 @@ void tokenize(char command[], char* args[]) {
 }
 
 // get commands to be run in parallel from the global command the user provided
-void tokenize_for_parallelCmd(char command[], char* args[]) {
+int tokenize_for_parallelCmd(char command[], char* args[]) {
     int arg_count = 0;
     char* token = strtok(command, "&");
 
@@ -33,7 +33,7 @@ void tokenize_for_parallelCmd(char command[], char* args[]) {
         token = strtok(NULL, "&");
     }
     args[arg_count] = NULL;
-
+    return arg_count;
 }
 
 // get arguments for command and output file for redirection
